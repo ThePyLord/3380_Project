@@ -71,3 +71,83 @@ class Queries:
         ORDER BY Points DESC;
         """
         return self.get_data(query)
+    
+    def polePositions(self):
+        query = """
+        SELECT Drivers.driverId, (Drivers.forename + ' ' + Drivers.surname) AS name, COUNT(Results.grid) AS PolePositions
+        FROM Results
+        JOIN Drivers ON Results.driverId = Drivers.driverId
+        WHERE Results.grid = 1
+        GROUP BY Drivers.driverId, Drivers.forename, Drivers.surname
+        ORDER BY PolePositions DESC;
+        """
+        return self.get_data(query)
+
+    def averagePitStopDurationByCircuit(self):
+        query = """
+        SELECT c.name, AVG(p.duration) AS AvgPitStopDuration
+        FROM pit_stops p
+        JOIN races r2 ON p.raceId = r2.raceId
+        JOIN circuits c ON r2.circuitId = c.circuitId
+        GROUP BY c.name
+        ORDER BY AvgPitStopDuration DESC;
+        """
+        return self.get_data(query)
+
+    def averagePitStopDurationByConstructor(self):
+        query = """
+        SELECT co.name, AVG(ps.duration) AS average_pit_stop_time
+        FROM pit_stops ps
+        JOIN results rs ON ps.raceId = rs.raceId AND ps.driverId = rs.driverId
+        JOIN constructors co ON rs.constructorId = co.constructorId
+        GROUP BY co.name
+        ORDER BY average_pit_stop_time ASC;
+        """
+        return self.get_data(query)
+
+    def fastestQualifyingTimesByCircuit(self):
+        query = """
+        SELECT ci.name AS circuit_name, r.year, q.driverId, MIN(q.qualifyingTime) AS fastest_qualifying_time
+        FROM qualifying q
+        JOIN races r ON q.raceId = r.raceId
+        JOIN circuits ci ON r.circuitId = ci.circuitId
+        GROUP BY circuit_name, r.year
+        ORDER BY circuit_name, fastest_qualifying_time ASC;
+        """
+        return self.get_data(query)
+
+    def mostSuccessfulDriversAtEachCircuit(self):
+        query = """
+        SELECT ci.name AS circuit_name, dr.driverRef, COUNT(*) AS wins
+        FROM results rs
+        JOIN races r ON rs.raceId = r.raceId
+        JOIN circuits ci ON r.circuitId = ci.circuitId
+        JOIN drivers dr ON rs.driverId = dr.driverId
+        WHERE rs.position = 1
+        GROUP BY circuit_name, dr.driverRef
+        ORDER BY wins DESC;
+        """
+        return self.get_data(query)
+
+    def driverStandingsOverTime(self, forename, surname):
+        query = f"""
+        SELECT r.year, r.round, dr.driverRef, rs.position
+        FROM results rs
+        JOIN races r ON rs.raceId = r.raceId
+        JOIN drivers dr ON rs.driverId = dr.driverId
+        WHERE dr.forename = '{forename}' AND dr.surname = '{surname}'
+        ORDER BY r.year, r.round;
+        """
+        return self.get_data(query)
+
+    def compareConstructorPerformance(self, constructor1, constructor2):
+        query = f"""
+        SELECT r.year, co.constructorRef, SUM(cr.points) AS total_points
+        FROM constructor_results cr
+        JOIN races r ON cr.raceId = r.raceId
+        JOIN constructors co ON cr.constructorId = co.constructorId
+        WHERE co.constructorRef IN ('{constructor1}', '{constructor2}')
+        GROUP BY r.year, co.constructorRef
+        ORDER BY r.year, total_points DESC;
+        """
+        return self.get_data(query)
