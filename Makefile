@@ -5,7 +5,7 @@ install:
 	python3 -m venv .venv
 
 activate_env:
-    echo "Activating environment"
+	echo "Activating environment"
 	source .venv/bin/activate
 	pip install -r requirements.txt
 
