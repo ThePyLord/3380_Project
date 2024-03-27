@@ -1,10 +1,25 @@
--- constructor_results table
-CREATE TABLE constructor_results (
-	"constructorResultsId"	INTEGER NOT NULL PRIMARY KEY,
-	"raceId"	INTEGER NOT NULL REFERENCES races(raceId),
-	"constructorId"	INTEGER NOT NULL REFERENCES constructors(constructorId),
-	"points"	INTEGER NOT NULL,
-	"status" varchar(max)
+-- drivers table
+CREATE TABLE drivers (
+    "driverId"    INTEGER PRIMARY KEY,
+    "driverRef"   varchar(max),
+    "number"      INTEGER,
+    "code"        varchar(max),
+    "forename"    varchar(max),
+    "surname"     varchar(max),
+    "dob"         varchar(max),
+    "nationality" varchar(max),
+);
+
+CREATE TABLE circuits (
+    "circuitId" INT PRIMARY KEY NOT NULL,
+    "circuitRef" varchar(max),
+    "name" varchar(max),
+    "location" varchar(max),
+    "country" varchar(max),
+    "lat" NUMERIC(7, 5),
+    "lng" NUMERIC(9, 6),
+    "alt" varchar(max),
+    "url" varchar(max),
 );
 
 -- races table
@@ -17,11 +32,11 @@ CREATE TABLE races (
     "date"        varchar(max)        NOT NULL,
     "time"        varchar(max),
     "url"         varchar(max),
-    "fp1_date"    varchar(max),
+    "fp1_date"    DATE,
 	"fp1_time"    varchar(max),
-	"fp2_date"    varchar(max),
+	"fp2_date"    DATE,
 	"fp2_time"    varchar(max),
-	"fp3_date"    varchar(max),
+	"fp3_date"    DATE,
 	"fp3_time"    varchar(max),
 	"quali_date"  varchar(max),
 	"quali_time"  varchar(max),
@@ -29,16 +44,32 @@ CREATE TABLE races (
 	"sprint_time" varchar(max)
 );
 
--- drivers table
-CREATE TABLE drivers (
-    "driverId"    INTEGER PRIMARY KEY,
-    "driverRef"   varchar(max),
-    "number"      INTEGER,
-    "code"        varchar(max),
-    "forename"    varchar(max),
-    "surname"     varchar(max),
-    "dob"         varchar(max),
+CREATE TABLE constructors (
+    "constructorId" INT PRIMARY KEY NOT NULL,
+    "constructorRef" varchar(max),
+    "name" varchar(max),
     "nationality" varchar(max),
+    "url" varchar(max)
+);
+
+-- constructor_standings table
+CREATE TABLE constructor_standings (
+	"constructorStandingsId" INTEGER NOT NULL PRIMARY KEY,
+	"raceId"	INTEGER NOT NULL REFERENCES races(raceId),
+	"constructorId"	INTEGER NOT NULL REFERENCES constructors(constructorId),
+	"points"	INTEGER NOT NULL,
+	"position"	INTEGER NOT NULL,
+	"positionText"	VARCHAR(max) NOT NULL,
+	"wins"	INTEGER NOT NULL
+);
+
+-- constructor_results table
+CREATE TABLE constructor_results (
+	"constructorResultsId"	INTEGER NOT NULL PRIMARY KEY,
+	"raceId"	INTEGER NOT NULL REFERENCES races(raceId),
+	"constructorId"	INTEGER NOT NULL REFERENCES constructors(constructorId),
+	"points"	INTEGER NOT NULL,
+	"status" varchar(max)
 );
 
 -- driver_standings table
@@ -59,9 +90,10 @@ CREATE TABLE lap_times (
     "driverId"     INTEGER NOT NULL REFERENCES drivers(driverId),
     "lap"          INTEGER NOT NULL,
     "position"     INTEGER,
-    "time"         varchar(max),
+    "time"         TIME,
     "milliseconds" INTEGER
 );
+
 -- pit_stops table
 CREATE TABLE pit_stops (
     "raceId"       INTEGER NOT NULL REFERENCES races(raceId),
@@ -84,9 +116,9 @@ CREATE TABLE qualifying (
     "constructorId"  INTEGER NOT NULL REFERENCES constructors(constructorId),
     "number"       INTEGER,
     "position"     INTEGER,
-    "q1"           varchar(max),
-    "q2"           varchar(max),
-    "q3"           varchar(max)
+    "q1"           TIME,
+    "q2"           TIME,
+    "q3"           TIME
 );
 
 -- status table
@@ -94,7 +126,6 @@ CREATE TABLE status (
 	"statusId" INTEGER PRIMARY KEY,
 	"status" varchar(max) NOT NULL
 );
-
 
 -- results table
 CREATE TABLE results (
@@ -109,12 +140,12 @@ CREATE TABLE results (
     "positionOrder"   INTEGER,
     "points"          INTEGER,
     "laps"            INTEGER,
-    "time"            varchar(max),
+    "time"            TIME,
     "milliseconds"    INTEGER,
     "fastestLap"      INTEGER,
     "rank"            INTEGER,
-    "fastestLapTime"  varchar(max),
-    "fastestLapSpeed" varchar(max),
+    "fastestLapTime"  TIME,
+    "fastestLapSpeed" DECIMAL(7, 3),
     "statusId"        INTEGER REFERENCES status("statusId")
 );
 
@@ -139,9 +170,9 @@ CREATE TABLE sprint_results (
     "laps"          INTEGER      NOT NULL,
     "time"          varchar(max),
     "milliseconds"  INTEGER,
-    "fastestLap"    varchar(max),
+    "fastestLap"    INTEGER,
     "rank"          INTEGER,
-    "fastestLapTime"  varchar(max),
+    "fastestLapTime"  TIME,
     "statusId"      INTEGER REFERENCES status("statusId"),
     PRIMARY KEY ("resultId", "raceId", "driverId")
 );

@@ -46,7 +46,6 @@ class Queries:
 		"""
         return self.get_data(query)
 
-    # @staticmethod
     def constructorPoints(self, year):
         query = """
 		SELECT c.name AS "Constructor Name", SUM(rs.points) AS Points
@@ -75,7 +74,7 @@ class Queries:
 
     def polePositions(self):
         query = """
-		SELECT Drivers.driverId, (Drivers.forename + ' ' + Drivers.surname) AS name, COUNT(Results.grid) AS PolePositions
+		SELECT Drivers.driverId, (Drivers.forename + ' ' + Drivers.surname) AS "Driver Name", COUNT(Results.grid) AS PolePositions
 		FROM Results
 		JOIN Drivers ON Results.driverId = Drivers.driverId
 		WHERE Results.grid = 1
@@ -108,12 +107,17 @@ class Queries:
 
     def fastestQualifyingTimesByCircuit(self):
         query = """
-		SELECT ci.name AS circuit_name, r.year, q.driverId, MIN(q.qualifyingTime) AS fastest_qualifying_time
+		SELECT
+			ci.name AS circuit_name,
+			r.year,
+			d.driverId,
+			MIN(COALESCE(q.q3, q.q2, q.q1)) AS fastest_qualifying_time
 		FROM qualifying q
 		JOIN races r ON q.raceId = r.raceId
 		JOIN circuits ci ON r.circuitId = ci.circuitId
-		GROUP BY circuit_name, r.year
-		ORDER BY circuit_name, fastest_qualifying_time ASC;
+		JOIN drivers d ON q.driverId = d.driverId
+		GROUP BY ci.name, r.year, d.driverId
+		ORDER BY circuit_name, r.year, fastest_qualifying_time;
 		"""
         return self.get_data(query)
 
@@ -152,3 +156,10 @@ class Queries:
 		ORDER BY r.year, total_points DESC;
 		"""
         return self.get_data(query, params={"constructor1": constructor1, "constructor2": constructor2})
+
+
+# def pole_v_finish(self, driver):
+# 	query = """
+# 	SELECT r.year, r.round, r.name, r.date, r.time, r.url, rs.grid, rs.position
+# 	FROM results rs
+# 	JOIN drivers d ON rs.driverId = d.driverId

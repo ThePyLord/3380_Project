@@ -64,7 +64,7 @@ layout = html.Div(
         dbc.Row(
             [
                 html.H3(
-                    children=f"Constructor Points in {year}",
+                    children=f"Constructor standings in {year}",
                     style={"textAlign": "center"},
                     id="constructor-title",
                 ),
@@ -177,7 +177,7 @@ def update_const_graph(value=2021):
 def update_title(year = 2021):
 	if year is None:
 		year = 2021
-	return f"Points won by Constructors in {year}"
+	return f"Constructor standings in {year}"
 
 
 @callback(Output("driver-fig", "figure"), Input("year-choice-driver", "value"))
@@ -202,4 +202,4 @@ def update_driver_graph(value=2021):
 def update_driver_title(year=2021):
 	if year is None:
 		year = 2021
-	return f"Points won by Drivers in {year}"
+	return f"Driver standings in {year}"
