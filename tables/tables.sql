@@ -6,7 +6,7 @@ CREATE TABLE drivers (
     "code"        varchar(max),
     "forename"    varchar(max),
     "surname"     varchar(max),
-    "dob"         varchar(max),
+    "dob"         DATE,
     "nationality" varchar(max),
 );
 
@@ -90,7 +90,7 @@ CREATE TABLE lap_times (
     "driverId"     INTEGER NOT NULL REFERENCES drivers(driverId),
     "lap"          INTEGER NOT NULL,
     "position"     INTEGER,
-    "time"         TIME,
+    "time"         varchar(max),
     "milliseconds" INTEGER
 );
 
@@ -101,7 +101,7 @@ CREATE TABLE pit_stops (
     "stop"         INTEGER NOT NULL,
     "lap"          INTEGER NOT NULL,
     "time"         TIME,
-    "duration"     DECIMAL(6, 3),
+    "duration"     varchar(max),
     "milliseconds" INTEGER,
     -- Added the stop column to the primary key to make it unique
     -- Might modify it if need be.
@@ -154,8 +154,8 @@ CREATE TABLE seasons (
     "year" INTEGER NOT NULL PRIMARY KEY,
     "url" varchar(max) NOT NULL
 );
--- sprint_results table
 
+-- sprint_results table
 CREATE TABLE sprint_results (
     "resultId"      INTEGER REFERENCES results("resultId"),
     "raceId"        INTEGER REFERENCES races("raceId") ,

@@ -6,3 +6,11 @@ __pycache__/
 *.ipynb
 *.pdf
 .env
+/.sample.env
+
+tables/create_statements
+*.db
+db_setup_v2.py
+mssql_serv.py
+pop_db.py
+tables/sqlite_table.sql
