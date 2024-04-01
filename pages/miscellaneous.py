@@ -64,11 +64,13 @@ layout = html.Div(
                 dbc.Row(
                     [
                         html.H2("Circuits Map with Elevation"),
-                        dcc.Graph(figure=circs_on_map),
                         html.Div(
                             className="text-center",
-                            children="Circuits Map with Elevation",
+                            children=[
+								html.P("Hover over the circuits to see their names and elevations. The size of the circle represents the elevation of the circuit.")
+                            ],
                         ),
+                        dcc.Graph(figure=circs_on_map),
                     ],
                     style={"textAlign": "center"},
                 ),

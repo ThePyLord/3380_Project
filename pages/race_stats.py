@@ -40,19 +40,31 @@ def create_pole_chart():
 
 
 def create_circuit_qual_time():
-	qual_time = q.fastestQualifyingTimesByCircuit()
-	circuits = q.circuits()
+    qual_time = q.fastestQualifyingTimesByCircuit()
+    circuits = q.circuits()
 
-	fig = px.bar(
-		qual_time,
-		x="circuit_name",
-		y="fastest_qualifying_time",
-		color="circuit_name",
-	)
+    fig = px.box(
+        qual_time,
+        x="circuit_name",
+        y="fastest_qualifying_time",
+        color="circuit_name",
+    )
 
-	fig.update_layout(autosize=False, margin=dict(t=50))
+    # for trace in fig.data:
+    #     trace.text = trace.y
+    #     trace.textposition = "outside"
+    #     trace.textfont.color = trace.marker.color
 
-	return fig
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
+    fig.update_layout(
+        autosize=True,
+        margin=dict(t=50),
+        title="Fastest Qualifying Times By Circuit",
+        xaxis_title="Circuit",
+        yaxis_title="Fastest Qualifying Time (s)",
+    )
+
+    return fig
 
 
 # page 1 data
@@ -61,48 +73,47 @@ pole_pos_chart = create_pole_chart()
 qual_chart = create_circuit_qual_time()
 
 layout = html.Div(
-	[
-		dbc.Row(
-			[
-				html.H3(
-					children="Drivers with the most pole positions",
-					style={"textAlign": "center"},
-				),
-				dbc.Col(
-					[
-						dcc.Graph(
-							id="graph-content",
-							figure=pole_pos_chart,
-						),
-					],
-					xs=7,
-					sm=7,
-					align="center",
-				),
-				dash_table.DataTable(id="circuit-id", data=circuits.to_dict('records'), page_size=10),
-
-				html.Div(
-					children=[
-						"The chart above shows the drivers with the most pole positions in Formula 1 history."
-					]
-				),
-			],
-			justify="center",
-		),
-		dbc.Row(
-			[
-				dbc.Col(
-					[
-						dcc.Graph(id="circuit-map", figure=circs_on_map),
-						dcc.Graph(id="qual-chart", figure=qual_chart),
-					],
-					width=12,
-				)
-			]
-		),
-	]
+    [
+        dbc.Row(
+            [
+                html.H3(
+                    children="Drivers with the most pole positions",
+                    style={"textAlign": "center"},
+                ),
+                dbc.Col(
+                    [
+                        dcc.Graph(
+                            id="graph-content",
+                            figure=pole_pos_chart,
+                        ),
+                    ],
+                    xs=7,
+                    sm=7,
+                    align="center",
+                ),
+                dash_table.DataTable(
+                    id="circuit-id", data=circuits.to_dict("records"), page_size=10
+                ),
+                html.Div(
+                    children=[
+                        "The chart above shows the drivers with the most pole positions in Formula 1 history."
+                    ]
+                ),
+            ],
+            justify="center",
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Graph(id="qual-chart", figure=qual_chart),
+                    ],
+                    # width=12,
+                )
+            ]
+        ),
+    ]
 )
-
 
 
 # @callback(Output("graph-content", "figure"), Input("cont-choice", "value"))
