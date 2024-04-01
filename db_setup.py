@@ -33,6 +33,9 @@ def insert_data():
         for table in table_order:
             with engine.begin() as conn:
                 try:
+                    if db_conn.execute(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{table}'").fetchone()[0]:
+                        print(f"{table} already exists")
+                        continue
                     db_conn = conn.connection
                     print(f"Inserting data into {table}")
                     with open(f'./tables/sql/{table}.sql', encoding='windows-1252') as f:
