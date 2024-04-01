@@ -1,12 +1,14 @@
-all: install activate_env db run
+all: create_env activate_env install_reqs db run
 
-install:
+create_env:
 	echo "Setting up"
 	python3 -m venv .venv
 
 activate_env:
 	echo "Activating environment"
 	source .venv/bin/activate
+
+install_reqs: activate_env
 	pip install -r requirements.txt
 
 db:
