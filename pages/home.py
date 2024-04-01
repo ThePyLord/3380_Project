@@ -22,7 +22,8 @@ layout = html.Div(
                     html.H3("Sitemap. It contains the following pages:"),
                     html.Ul([
                         html.Li("Home: This page."),
-                        html.Li("Performance Stats: This page contains statistics on the performance of drivers and constructors."), 
+                        html.Li("Miscellaneous Stats: This page contains miscellaneous statistics. For example, the fastest laps."),
+                        html.Li("Performance Stats: This page contains statistics on the performance of drivers and constructors."),
                         html.Li("Race Stats: This page contains statistics relating to races or events that happen during races.")
                     ]),
                 ]),

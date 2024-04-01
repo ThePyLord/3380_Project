@@ -1,116 +1,108 @@
 import dash
-from dash import dcc, html, callback, Output, Input
+from dash import dcc, html, callback, Output, Input, dash_table
 import plotly.express as px
+import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from queries import Queries
 
-
 dash.register_page(__name__, path="/race_stats", name="Race Stats")
 
-
 q = Queries()
+circuits = q.circuits()
+# Drop circuits with missing lat/lng values or missing elevation data
+circs = circuits.copy().dropna(subset=["lat", "lng", "elevation"])
+# Set the elevation to an absolute value, but keep the original for hover text
+circs["adj_elevation"] = circs["elevation"]
+circs.loc[:, "adj_elevation"] = circs.loc[:, "elevation"] - circs.loc[:, "elevation"].min() + 1
+
+# circs_
+circs_on_map = px.scatter_geo(circs, lat="lat", lon="lng", hover_name="name", size="adj_elevation", color="elevation", projection="natural earth")
 
 def create_pole_chart():
-    pole = q.polePositions()
-    fig = px.bar(
-        pole,
-        y="Driver Name",
-        x="PolePositions",
-        color="Driver Name",
-        # text="PolePositions",
-        # orientation="h",
-    )
+	pole = q.polePositions()
+	fig = px.bar(
+		pole,
+		x="Driver Name",
+		y="PolePositions",
+		color="Driver Name",
+		# text="PolePositions",
+		# orientation="h",
+	)
 
-    for trace in fig.data:
-        trace.text = trace.y
-        trace.textposition = "outside"
-        trace.textfont.color = trace.marker.color
-    fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
-    fig.update_layout(autosize=False, margin=dict(t=50))
+	for trace in fig.data:
+		trace.text = trace.y	
+		trace.textposition = "outside"
+		trace.textfont.color = trace.marker.color
+	fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
+	fig.update_layout(autosize=False, margin=dict(t=50))
 
-    return fig
+	return fig
 
 
 def create_circuit_qual_time():
-    qual_time = q.fastestQualifyingTimesByCircuit()
-    fig = px.bar(
-        qual_time,
-        x="circuit_name",
-        y="fastest_qualifying_time",
-        color="circuit_name",
-    )
-    
-    pass
+	qual_time = q.fastestQualifyingTimesByCircuit()
+	circuits = q.circuits()
+
+	fig = px.bar(
+		qual_time,
+		x="circuit_name",
+		y="fastest_qualifying_time",
+		color="circuit_name",
+	)
+
+	fig.update_layout(autosize=False, margin=dict(t=50))
+
+	return fig
+
 
 # page 1 data
 df = px.data.gapminder()
 pole_pos_chart = create_pole_chart()
+qual_chart = create_circuit_qual_time()
+
 layout = html.Div(
-    [
-        dbc.Row(
-            [
-                html.H3(
-                    children="Drivers with the most pole positions",
-                    style={"textAlign": "center"},
-                ),
-                dbc.Col(
-                    [
-                        dcc.Graph(
-                            id="graph-content",
-                            figure=pole_pos_chart,
-                        ),
-                    ],
-                    xs=7,
-                    sm=7,
-                    align="center",
-                ),
-                # dcc.Graph(
-                #     id="graph-content", figure=pole_pos_chart, style={"height": "100%"}
-                # ),
-                html.Div(
-                    children=[
-                        "The chart above shows the drivers with the most pole positions in Formula 1 history."
-                    ]
-                ),
-                dbc.Col(
-                    [dcc.Dropdown(options=df.continent.unique(), id="cont-choice")],
-                    xs=10,
-                    sm=10,
-                    md=8,
-                    lg=4,
-                    xl=4,
-                    xxl=4,
-                ),
-            ],
-            justify="center",
-        ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        dcc.Graph(
-                            id="line-fig",
-                            figure=px.histogram(
-                                df, x="continent", y="lifeExp", histfunc="avg"
-                            ),
-                        )
-                    ],
-                    width=12,
-                )
-            ]
-        ),
-    ]
+	[
+		dbc.Row(
+			[
+				html.H3(
+					children="Drivers with the most pole positions",
+					style={"textAlign": "center"},
+				),
+				dbc.Col(
+					[
+						dcc.Graph(
+							id="graph-content",
+							figure=pole_pos_chart,
+						),
+					],
+					xs=7,
+					sm=7,
+					align="center",
+				),
+				dash_table.DataTable(id="circuit-id", data=circuits.to_dict('records'), page_size=10),
+
+				html.Div(
+					children=[
+						"The chart above shows the drivers with the most pole positions in Formula 1 history."
+					]
+				),
+			],
+			justify="center",
+		),
+		dbc.Row(
+			[
+				dbc.Col(
+					[
+						dcc.Graph(id="circuit-map", figure=circs_on_map),
+						dcc.Graph(id="qual-chart", figure=qual_chart),
+					],
+					width=12,
+				)
+			]
+		),
+	]
 )
 
-
-@callback(Output("line-fig", "figure"), Input("cont-choice", "value"))
-def update_graph(value):
-    if value is None:
-        fig = px.histogram(df, x="continent", y="lifeExp", histfunc="avg")
-    else:
-        dff = df[df.continent == value]
-        fig = px.histogram(dff, x="country", y="lifeExp", histfunc="avg")
-    return fig
 
 
 # @callback(Output("graph-content", "figure"), Input("cont-choice", "value"))

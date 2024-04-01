@@ -18,7 +18,7 @@ CREATE TABLE circuits (
     "country" varchar(max),
     "lat" NUMERIC(7, 5),
     "lng" NUMERIC(9, 6),
-    "alt" varchar(max),
+    "alt" INTEGER,
     "url" varchar(max),
 );
 
@@ -29,15 +29,15 @@ CREATE TABLE races (
     "round"       INTEGER             NOT NULL,
     "circuitId"   INTEGER             NOT NULL REFERENCES circuits(circuitId),
     "name"        varchar(max)        NOT NULL,
-    "date"        varchar(max)        NOT NULL,
-    "time"        varchar(max),
+    "date"        DATE        NOT NULL,
+    "time"        TIME,
     "url"         varchar(max),
     "fp1_date"    DATE,
-	"fp1_time"    varchar(max),
+	"fp1_time"    TIME,
 	"fp2_date"    DATE,
-	"fp2_time"    varchar(max),
+	"fp2_time"    TIME,
 	"fp3_date"    DATE,
-	"fp3_time"    varchar(max),
+	"fp3_time"    TIME,
 	"quali_date"  varchar(max),
 	"quali_time"  varchar(max),
 	"sprint_date" varchar(max),
@@ -116,9 +116,9 @@ CREATE TABLE qualifying (
     "constructorId"  INTEGER NOT NULL REFERENCES constructors(constructorId),
     "number"       INTEGER,
     "position"     INTEGER,
-    "q1"           TIME,
-    "q2"           TIME,
-    "q3"           TIME
+    "q1"           DECIMAL(10, 3),
+    "q2"           DECIMAL(10, 3),
+    "q3"           DECIMAL(10, 3)
 );
 
 -- status table
@@ -140,16 +140,16 @@ CREATE TABLE results (
     "positionOrder"   INTEGER,
     "points"          INTEGER,
     "laps"            INTEGER,
-    "time"            TIME,
+    "time"            VARCHAR(max),
     "milliseconds"    INTEGER,
     "fastestLap"      INTEGER,
     "rank"            INTEGER,
-    "fastestLapTime"  TIME,
+    "fastestLapTime"  DECIMAL(7, 3),
     "fastestLapSpeed" DECIMAL(7, 3),
     "statusId"        INTEGER REFERENCES status("statusId")
 );
 
--- seasons table
+-- seasons table   
 CREATE TABLE seasons (
     "year" INTEGER NOT NULL PRIMARY KEY,
     "url" varchar(max) NOT NULL
@@ -163,7 +163,7 @@ CREATE TABLE sprint_results (
     "constructorId" INTEGER REFERENCES constructors("constructorId"),
     "number"        INTEGER,
     "grid"          INTEGER      NOT NULL,
-    "position"      INTEGER      NOT NULL,
+    "position"      INTEGER,
     "positionText"  varchar(max) NOT NULL,
     "positionOrder" INTEGER      NOT NULL,
     "points"        INTEGER      NOT NULL,
@@ -171,8 +171,7 @@ CREATE TABLE sprint_results (
     "time"          varchar(max),
     "milliseconds"  INTEGER,
     "fastestLap"    INTEGER,
-    "rank"          INTEGER,
-    "fastestLapTime"  TIME,
+    "fastestLapTime"  DECIMAL(7, 3),
     "statusId"      INTEGER REFERENCES status("statusId"),
     PRIMARY KEY ("resultId", "raceId", "driverId")
 );
