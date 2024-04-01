@@ -87,6 +87,7 @@ def clear_db():
     return 0
 
 if __name__ == '__main__':
-    create_tables()
-    insert_data()
+    # create_tables()
+    # insert_data()
+    print('Database setup complete.')
     # clear_db()
