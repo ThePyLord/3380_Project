@@ -182,7 +182,16 @@ layout = html.Div(
                                     children="Performance Difference between Ferrari and Mercedes",
                                     style={"textAlign": "center"},
                                 ),
-                                dbc.Row([dcc.Dropdown(options = constructors.loc[:, 'constructor'], id="team-choice", value=teams, multi=True)]),
+                                dbc.Row(
+                                    [
+                                        dcc.Dropdown(
+                                            options=constructors.loc[:, "constructor"],
+                                            id="team-choice",
+                                            value=teams,
+                                            multi=True,
+                                        )
+                                    ]
+                                ),
                                 dcc.Graph(id="const_diff_plot", figure=const_diff),
                             ]
                         ),
@@ -194,13 +203,35 @@ layout = html.Div(
                             children="Number of sprint races won by drivers (all time)",
                             style={"textAlign": "center"},
                         ),
-                        dash_table.DataTable(
-                            id="const-table",
-                            columns=[
-                                {"name": i, "id": i} for i in sprint_table.columns
+                        dbc.Col(
+                            [
+                                html.Div(
+                                    children=[
+                                        "Sprint races only started in 2021, so the data is only available from then.",
+                                        # "The table below shows drivers who have won sprint races and the number of wins.",
+                                    ],
+                                    style={
+                                        "textAlign": "center",
+                                        # "display": "block",
+                                        # "flex-direction": "column",
+                                    },
+                                ),
+                                dash_table.DataTable(
+                                    id="const-table",
+                                    columns=[
+                                        {"name": i, "id": i}
+                                        for i in sprint_table.columns
+                                    ],
+                                    data=sprint_table.to_dict("records"),
+                                    page_size=10,
+                                ),
                             ],
-                            data=sprint_table.to_dict("records"),
-                            page_size=10,
+                            style={
+                                "display": "flex",
+								"justify-content": "center",
+                                "align-items": "center",
+                                "flex-direction": "column",
+                            },
                         ),
                     ],
                     justify="center",
