@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, callback, Output, Input
+from dash import dcc, html, callback, Output, Input, dash_table
 import numpy as np
 import plotly.express as px
 import dash_bootstrap_components as dbc
@@ -14,7 +14,7 @@ q = Queries()
 year = 2021
 driver_year = 2021
 teams = ["ferrari", "mercedes"]
-
+constructors = q.constructors()
 
 def create_driver_table(year=2021):
 	driver_pts = q.driverPoints(year)
@@ -58,139 +58,157 @@ def create_const_table(year=2021):
 
 
 def create_const_diff(teams=["ferrari", "mercedes"]):
-	const_diff = q.compareConstructorPerformance(teams[0], teams[1])
-	fig = px.line(
-		const_diff,
-		x="year",
-		y="total_points",
-		color="constructor",
-		markers=True,
-		symbol="constructor",
-		title=f"Performance difference between {teams[0].capitalize()} and {teams[1].capitalize()}",
-	)
+    const_diff = q.compareConstructorPerformance(teams[0], teams[1])
+    fig = px.line(
+        const_diff,
+        x="year",
+        y="total_points",
+        color="constructor",
+        markers=True,
+        symbol="constructor",
+    )
 
-	fig.update_layout(
-		autosize=True,
-		margin=dict(t=50),
-		yaxis_title="Total Points",
-		xaxis_title="Year",
-	)
+    fig.update_layout(
+        autosize=True,
+        margin=dict(t=50),
+        yaxis_title="Total Points",
+        xaxis_title="Year",
+    )
 
-	return fig
+    return fig
 
 
 # fig = px.bar(q.constructorPoints(year), x="Constructor Name", y="Points", color="Constructor Name")
-
+sprint_table = q.sprint_results()
 fig = create_const_table()
 driver_fig = create_driver_table()
 const_diff = create_const_diff(teams)
 
 layout = html.Div(
-	[
-		dbc.Row(
-			[
-				html.H3(
-					children=f"Constructor standings in {year}",
-					style={"textAlign": "center"},
-					id="constructor-title",
-				),
-				dbc.Col(
-					[dcc.Dropdown(options=np.arange(1950, 2023 + 1), id="year-choice")],
-					xs=10,
-					sm=10,
-					md=8,
-					lg=4,
-					xl=4,
-					xxl=4,
-				),
-			],
-			justify="center",
-		),
-		dbc.Row(
-			[
-				dbc.Col(
-					[
-						dcc.Graph(
-							id="bar-fig",
-							figure=fig,
-						),
-						dbc.Row(
-							[
-								html.Caption(
-									"The bar chart above shows the points won by constructors in the selected year(Excludes constructors with 0 points).",
-									style={
-										"textAlign": "center",
-										"fontStyle": "italic",
-										"fontSize": "small",
-									},
-								)
-							]
-						),
-					],
-					width=12,
-				),
-				html.Hr(),
-				dbc.Row(
-					[
-						html.H3(
-							children=f"Driver Points in {driver_year}",
-							style={"textAlign": "center"},
-							id="driver-title",
-						),
-						dbc.Col(
-							[
-								dcc.Dropdown(
-									options=np.arange(1950, 2023 + 1),
-									id="year-choice-driver",
-								)
-							],
-							xs=10,
-							sm=10,
-							md=8,
-							lg=4,
-							xl=4,
-							xxl=4,
-						),
-						dbc.Col(
-							[
-								dcc.Graph(
-									id="driver-fig",
-									figure=driver_fig,
-								),
-								dbc.Row(
-									[
-										html.Caption(
-											"The bar chart above shows the points won by drivers in the selected year(Excludes drivers that didn't get any points).",
-											style={
-												"textAlign": "center",
-												"fontStyle": "italic",
-												"fontSize": "small",
-											},
-										)
-									]
-								),
-							],
-							width=12,
-						),
-					],
-					justify="center",
-				),
-				dbc.Row(
-					[
-						dbc.Col(
-							[
-								html.H3(
-									children="Performance Difference between Ferrari and Mercedes",
-									style={"textAlign": "center"},
-								),
-								dcc.Graph(id="const_diff_plot", figure=const_diff)
-							]
-						),
-					]
-				),
-			],
-		),
-	]
+    [
+        dbc.Row(
+            [
+                html.H3(
+                    children=f"Constructor standings in {year}",
+                    style={"textAlign": "center"},
+                    id="constructor-title",
+                ),
+                dbc.Col(
+                    [dcc.Dropdown(options=np.arange(1950, 2023 + 1), id="year-choice")],
+                    xs=10,
+                    sm=10,
+                    md=8,
+                    lg=4,
+                    xl=4,
+                    xxl=4,
+                ),
+            ],
+            justify="center",
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Graph(
+                            id="bar-fig",
+                            figure=fig,
+                        ),
+                        dbc.Row(
+                            [
+                                html.Caption(
+                                    "The bar chart above shows the points won by constructors in the selected year(Excludes constructors with 0 points).",
+                                    style={
+                                        "textAlign": "center",
+                                        "fontStyle": "italic",
+                                        "fontSize": "small",
+                                    },
+                                )
+                            ]
+                        ),
+                    ],
+                    width=12,
+                ),
+                html.Hr(),
+                dbc.Row(
+                    [
+                        html.H3(
+                            children=f"Driver Points in {driver_year}",
+                            style={"textAlign": "center"},
+                            id="driver-title",
+                        ),
+                        dbc.Col(
+                            [
+                                dcc.Dropdown(
+                                    options=np.arange(1950, 2023 + 1),
+                                    id="year-choice-driver",
+                                )
+                            ],
+                            xs=10,
+                            sm=10,
+                            md=8,
+                            lg=4,
+                            xl=4,
+                            xxl=4,
+                        ),
+                        dbc.Col(
+                            [
+                                dcc.Graph(
+                                    id="driver-fig",
+                                    figure=driver_fig,
+                                ),
+                                dbc.Row(
+                                    [
+                                        html.Caption(
+                                            "The bar chart above shows the points won by drivers in the selected year(Excludes drivers that didn't get any points).",
+                                            style={
+                                                "textAlign": "center",
+                                                "fontStyle": "italic",
+                                                "fontSize": "small",
+                                            },
+                                        )
+                                    ]
+                                ),
+                            ],
+                            width=12,
+                        ),
+                    ],
+                    justify="center",
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.H3(
+                                    children="Performance Difference between Ferrari and Mercedes",
+                                    style={"textAlign": "center"},
+                                ),
+                                dbc.Row([dcc.Dropdown(options = constructors.loc[:, 'constructor'], id="team-choice", value=teams, multi=True)]),
+                                dcc.Graph(id="const_diff_plot", figure=const_diff),
+                            ]
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        html.H3(
+                            children="Number of sprint races won by drivers (all time)",
+                            style={"textAlign": "center"},
+                        ),
+                        dash_table.DataTable(
+                            id="const-table",
+                            columns=[
+                                {"name": i, "id": i} for i in sprint_table.columns
+                            ],
+                            data=sprint_table.to_dict("records"),
+                            page_size=10,
+                        ),
+                    ],
+                    justify="center",
+                    style={"margin-bottom": "20%"},
+                ),
+            ],
+        ),
+    ]
 )
 
 

@@ -67,6 +67,25 @@ def create_circuit_qual_time():
     return fig
 
 
+def create_sprint_table():
+    sprint_results = q.sprint_results()
+    fig = px.bar(
+        sprint_results,
+        x="Driver Name",
+        y="Points",
+        color="Driver Name",
+        text="Points",
+    )
+
+    for trace in fig.data:
+        trace.text = trace.y
+        trace.textposition = "outside"
+        trace.textfont.color = trace.marker.color
+
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
+    return fig
+
+
 # page 1 data
 df = px.data.gapminder()
 pole_pos_chart = create_pole_chart()
@@ -86,6 +105,11 @@ layout = html.Div(
                             id="graph-content",
                             figure=pole_pos_chart,
                         ),
+                        html.Div(
+                            children=[
+                                "The chart above shows the drivers with the most pole positions in Formula 1 history."
+                            ]
+                        ),
                     ],
                     xs=7,
                     sm=7,
@@ -93,11 +117,6 @@ layout = html.Div(
                 ),
                 dash_table.DataTable(
                     id="circuit-id", data=circuits.to_dict("records"), page_size=10
-                ),
-                html.Div(
-                    children=[
-                        "The chart above shows the drivers with the most pole positions in Formula 1 history."
-                    ]
                 ),
             ],
             justify="center",
