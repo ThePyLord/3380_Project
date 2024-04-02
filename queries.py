@@ -228,14 +228,17 @@ class Queries:
 		"""
 		return self.get_data(query)
 
-	def lap_time_progression(self, raceId, driverId):
+	def lap_time_progression(self, race_year, race_name, driver_forename, driver_surname):
 		query = """
-		SELECT lap, milliseconds / 1000 AS seconds
-		FROM lap_times
-		WHERE raceId = ? AND driverId = ?
-		ORDER BY lap;"""
+			SELECT lap_times.lap, lap_times.milliseconds / 1000 AS seconds
+			FROM lap_times
+			INNER JOIN races ON lap_times.raceId = races.raceId
+			INNER JOIN drivers ON lap_times.driverId = drivers.driverId
+			WHERE races.year = ? AND races.name = ? AND drivers.forename = ? AND drivers.surname = ?
+			ORDER BY lap_times.lap;
+		"""
+		return self.get_data(query, params=(race_year, race_name, driver_forename, driver_surname))
 
-		return self.get_data(query, params=(raceId, driverId))
 
 # def pole_v_finish(self, driver):
 # 	query = """

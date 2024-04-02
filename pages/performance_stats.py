@@ -77,6 +77,25 @@ def create_const_diff(teams=["ferrari", "mercedes"]):
 
     return fig
 
+def create_line_progression(params=[2009,"Australian Grand Prix","Lewis","Hamilton"]):
+    const_diff = q.lap_time_progression(params[0], params[1],params[2],params[3])
+    fig = px.line(
+        const_diff,
+        x="Laps",
+        y="Seconds",
+        color="constructor",
+        markers=True,
+        symbol="constructor",
+    )
+
+    fig.update_layout(
+        autosize=True,
+        margin=dict(t=50),
+        yaxis_title="Seconds",
+        xaxis_title="Laps",
+    )
+
+    return fig
 
 # fig = px.bar(q.constructorPoints(year), x="Constructor Name", y="Points", color="Constructor Name")
 sprint_table = q.sprint_results()
