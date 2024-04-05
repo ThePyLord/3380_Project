@@ -68,7 +68,7 @@ layout = html.Div(
             [
                 html.Div(
                     [
-                        html.H2("Fastest Laps Table"),
+                        html.H2("Fastest Laps Table", style={"textAlign": "center"}),
                         dash_table.DataTable(
                             id="fastest_laps_table",
                             columns=[

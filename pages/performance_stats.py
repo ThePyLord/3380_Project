@@ -1,10 +1,9 @@
 import dash
-from dash import dcc, html, callback, Output, Input, dash_table
+from dash import dcc, html, callback, Output, Input, dash_table, State
 import numpy as np
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from queries import Queries
-
 
 dash.register_page(__name__, path="/performance")
 
@@ -16,49 +15,52 @@ driver_year = 2021
 teams = ["ferrari", "mercedes"]
 constructors = q.constructors()
 
-def create_driver_table(year=2021):
-	driver_pts = q.driverPoints(year)
-	fig = px.bar(
-		driver_pts,
-		x="Driver Name",
-		y="Points",
-		color="Driver Name",
-		text="Points",
-	)
-	fig.update_traces(texttemplate="%{text}", textposition="outside")
 
-	# Update traces to show text above bars
-	for trace in fig.data:
-		trace.text = trace.y
-		trace.textposition = "outside"
-		trace.textfont.color = trace.marker.color
-	# Optionally, update the layout to adjust the space so that the text fits well
-	fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
-	return fig
+def create_driver_table(year=2021):
+    driver_pts = q.driverPoints(year)
+    fig = px.bar(
+        driver_pts,
+        x="Driver Name",
+        y="Points",
+        color="Driver Name",
+        text="Points",
+    )
+    fig.update_traces(texttemplate="%{text}", textposition="outside")
+
+    # Update traces to show text above bars
+    for trace in fig.data:
+        trace.text = trace.y
+        trace.textposition = "outside"
+        trace.textfont.color = trace.marker.color
+    # Optionally, update the layout to adjust the space so that the text fits well
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
+    return fig
 
 
 def create_const_table(year=2021):
-	const_pts = q.constructorPoints(year)
-	fig = px.bar(
-		const_pts,
-		x="Constructor Name",
-		y="Points",
-		color="Constructor Name",
-		text="Points",
-	)
+    const_pts = q.constructorPoints(year)
+    fig = px.bar(
+        const_pts,
+        x="Constructor Name",
+        y="Points",
+        color="Constructor Name",
+        text="Points",
+    )
 
-	# Update traces to show text above bars
-	for trace in fig.data:
-		trace.text = trace.y
-		trace.textposition = "outside"
-		trace.textfont.color = trace.marker.color
-	# Optionally, update the layout to adjust the space so that the text fits well
-	fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
-	return fig
+    # Update traces to show text above bars
+    for trace in fig.data:
+        trace.text = trace.y
+        trace.textposition = "outside"
+        trace.textfont.color = trace.marker.color
+    # Optionally, update the layout to adjust the space so that the text fits well
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode="hide")
+    return fig
 
 
 def create_const_diff(teams=["ferrari", "mercedes"]):
     const_diff = q.compareConstructorPerformance(teams[0], teams[1])
+    if teams[0] != "ferrari" and teams[0] != "mercedes":
+        print(f"Team 1: {teams[0]}, Team 2: {teams[1]}")
     fig = px.line(
         const_diff,
         x="year",
@@ -73,12 +75,16 @@ def create_const_diff(teams=["ferrari", "mercedes"]):
         margin=dict(t=50),
         yaxis_title="Total Points",
         xaxis_title="Year",
+        xaxis_type="category",
     )
 
     return fig
 
-def create_line_progression(params=[2009,"Australian Grand Prix","Lewis","Hamilton"]):
-    const_diff = q.lap_time_progression(params[0], params[1],params[2],params[3])
+
+def create_line_progression(
+    params=[2009, "Australian Grand Prix", "Lewis", "Hamilton"]
+):
+    const_diff = q.lap_time_progression(params[0], params[1], params[2], params[3])
     fig = px.line(
         const_diff,
         x="Laps",
@@ -97,7 +103,7 @@ def create_line_progression(params=[2009,"Australian Grand Prix","Lewis","Hamilt
 
     return fig
 
-# fig = px.bar(q.constructorPoints(year), x="Constructor Name", y="Points", color="Constructor Name")
+
 sprint_table = q.sprint_results()
 fig = create_const_table()
 driver_fig = create_driver_table()
@@ -155,19 +161,13 @@ layout = html.Div(
                             style={"textAlign": "center"},
                             id="driver-title",
                         ),
-                        dbc.Col(
+                        dbc.Row(
                             [
                                 dcc.Dropdown(
                                     options=np.arange(1950, 2023 + 1),
                                     id="year-choice-driver",
                                 )
                             ],
-                            xs=10,
-                            sm=10,
-                            md=8,
-                            lg=4,
-                            xl=4,
-                            xxl=4,
                         ),
                         dbc.Col(
                             [
@@ -193,28 +193,76 @@ layout = html.Div(
                     ],
                     justify="center",
                 ),
+                html.Hr(),
                 dbc.Row(
                     [
-                        dbc.Col(
+                        html.Div(
                             [
-                                html.H3(
-                                    children="Performance Difference between Ferrari and Mercedes",
-                                    style={"textAlign": "center"},
-                                ),
                                 dbc.Row(
                                     [
-                                        dcc.Dropdown(
-                                            options=constructors.loc[:, "constructor"],
-                                            id="team-choice",
-                                            value=teams,
-                                            multi=True,
+                                        dbc.Row(
+                                            [
+                                                html.H3(
+                                                    id="const_diff_title",
+                                                    children="Performance Difference between Ferrari and Mercedes",
+                                                    style={"textAlign": "center"},
+                                                ),
+                                            ]
                                         )
                                     ]
                                 ),
-                                dcc.Graph(id="const_diff_plot", figure=const_diff),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            [
+                                                dcc.Dropdown(
+                                                    options=[
+                                                        {
+                                                            "label": row["constructor"],
+                                                            "value": row[
+                                                                "constructorRef"
+                                                            ],
+                                                        }
+                                                        for index, row in constructors.iterrows()
+                                                    ],
+                                                    id="team-choice-1",
+                                                ),
+                                                dcc.Dropdown(
+                                                    options=[
+                                                        {
+                                                            "label": row["constructor"],
+                                                            "value": row[
+                                                                "constructorRef"
+                                                            ],
+                                                        }
+                                                        for index, row in constructors.iterrows()
+                                                    ],
+                                                    id="team-choice-2",
+                                                ),
+                                            ],
+                                            width=10,
+                                        ),
+                                        dbc.Col(
+                                            [
+                                                html.Button(
+                                                    id="submit-button",
+                                                    className="btn btn-outline-primary",
+                                                    n_clicks=0,
+                                                    children="Submit",
+                                                ),
+                                            ],
+                                            width=1,
+                                        ),
+                                        dcc.Graph(
+                                            id="const_diff_plot_2", figure=const_diff
+                                        ),
+                                    ],
+                                    justify="center",
+                                ),
                             ]
                         ),
-                    ]
+                    ],
+                    justify="center",
                 ),
                 dbc.Row(
                     [
@@ -229,11 +277,7 @@ layout = html.Div(
                                         "Sprint races only started in 2021, so the data is only available from then.",
                                         # "The table below shows drivers who have won sprint races and the number of wins.",
                                     ],
-                                    style={
-                                        "textAlign": "center",
-                                        # "display": "block",
-                                        # "flex-direction": "column",
-                                    },
+                                    style={"textAlign": "center"},
                                 ),
                                 dash_table.DataTable(
                                     id="const-table",
@@ -247,7 +291,7 @@ layout = html.Div(
                             ],
                             style={
                                 "display": "flex",
-								"justify-content": "center",
+                                "justify-content": "center",
                                 "align-items": "center",
                                 "flex-direction": "column",
                             },
@@ -264,61 +308,124 @@ layout = html.Div(
 
 @callback(Output("bar-fig", "figure"), Input("year-choice", "value"))
 def update_const_graph(value=2021):
-	if value is None:
-		value = 2021
-	global year
-	year = value
-	const_pts = q.constructorPoints(value)
-	fig = px.bar(
-		const_pts,
-		x="Constructor Name",
-		y="Points",
-		color="Constructor Name",
-		text="Points",
-	)
+    if value is None:
+        value = 2021
+    global year
+    year = value
+    const_pts = q.constructorPoints(value)
+    fig = px.bar(
+        const_pts,
+        x="Constructor Name",
+        y="Points",
+        color="Constructor Name",
+        text="Points",
+    )
 
-	# Update the text on the bars to display the y-value (Points)
-	fig = create_const_table(value)
-	fig.update_layout(autosize=True, margin=dict(t=50))
+    # Update the text on the bars to display the y-value (Points)
+    fig = create_const_table(value)
+    fig.update_layout(autosize=True, margin=dict(t=50))
 
-	return fig
+    return fig
 
 
 @callback(Output("constructor-title", "children"), Input("year-choice", "value"))
 def update_title(year=2021):
-	if year is None:
-		year = 2021
-	return f"Constructor standings in {year}"
+    if year is None:
+        year = 2021
+    return f"Constructor standings in {year}"
 
 
 @callback(Output("driver-fig", "figure"), Input("year-choice-driver", "value"))
 def update_driver_graph(value=2021):
-	if value is None:
-		value = 2021
-	global driver_year
-	driver_year = value
-	driver_pts = q.driverPoints(value)
-	fig = px.bar(
-		driver_pts, x="Driver Name", y="Points", color="Driver Name", text="Points"
-	)
+    if value is None:
+        value = 2021
+    global driver_year
+    driver_year = value
+    driver_pts = q.driverPoints(value)
+    fig = px.bar(
+        driver_pts, x="Driver Name", y="Points", color="Driver Name", text="Points"
+    )
 
-	# Update the text on the bars to display the y-value (Points)
-	fig = create_driver_table(value)
-	fig.update_layout(autosize=True, margin=dict(t=50))
+    # Update the text on the bars to display the y-value (Points)
+    fig = create_driver_table(value)
+    fig.update_layout(autosize=True, margin=dict(t=50))
 
-	return fig
+    return fig
 
 
 @callback(Output("driver-title", "children"), Input("year-choice-driver", "value"))
 def update_driver_title(year=2021):
-	if year is None:
-		year = 2021
-	return f"Driver standings in {year}"
+    if year is None:
+        year = 2021
+    return f"Driver standings in {year}"
 
 
-@callback(Output("const_diff_plot", "figure"), Input("year-choice", "value"))
-def update_const_diff_plot(value=2021):
-	if value is None:
-		value = 2021
-	const_diff = create_const_diff(teams)
-	return const_diff
+# @callback(Output("const_diff_plot", "figure"), Input("year-choice", "value"))
+# def update_const_diff_plot(value=2021):
+# 	if value is None:
+# 		value = 2021
+# 	const_diff = create_const_diff(teams)
+# 	return const_diff
+
+
+@callback(Output("team-choice-1", "options"), Input("team-choice-2", "value"))
+def update_team_choice_1(value):
+    if value is None:
+        teams = q.constructors()
+    else:
+        print(f"Team choice 2: {value}")
+        teams = q.co_competitors(value)
+        # dash.no_update
+    teams_head = teams.head()
+    opts = [
+        {"label": row["constructor"], "value": row["constructorRef"]}
+        for index, row in teams.iterrows()
+    ]
+    print(opts)
+    # print(f'Team choice 1: {teams.loc[0, "constructor"]}')
+    # print(f'Team choice 1: {teams}')
+    return opts
+
+
+@callback(Output("team-choice-2", "options"), Input("team-choice-1", "value"))
+def update_team_choice_2(value):
+    if value is None:
+        teams = q.constructors()
+    else:
+        print(f"Team choice 1: {value}")
+        teams = q.co_competitors(value)
+    teams_head = teams.head()
+    opts = [
+        {"label": row["constructor"], "value": row["constructorRef"]}
+        for index, row in teams.iterrows()
+    ]
+    print(opts)
+    # print(f'Team choice 2: {teams.loc[0, "constructor"]}')
+    return opts
+
+
+@callback(
+    [
+        Output("const_diff_plot_2", "figure"),
+        Output("const_diff_title", "children"),
+        Output("team-choice-1", "value"),
+        Output("team-choice-2", "value"),
+    ],
+    Input("submit-button", "n_clicks"),
+    State("team-choice-1", "value"),
+    State("team-choice-2", "value"),
+)
+def update_const_diff_plot(n_clicks, team1, team2):
+    if n_clicks == 0:
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+    # if team1 is None or team2 is None:
+    #     team1 = "Ferrari"
+    #     team2 = "Mercedes"
+    teams = [team1, team2]
+    const_diff = create_const_diff(teams)
+    return (
+        const_diff,
+        f"Performance Difference between {team1} and {team2}",
+        None,
+        None,
+    )

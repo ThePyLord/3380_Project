@@ -1,4 +1,7 @@
-all: create_env activate_env install_reqs db run
+all: create_env install_reqs db run
+
+PYTHON = .venv/bin/python3
+PIP = .venv/bin/pip
 
 create_env:
 	@echo "Setting up"
@@ -7,19 +10,19 @@ create_env:
 venv/bin/activate:
 	chmod +x .venv/bin/activate
 	. .venv/bin/activate
-	pip install -r requirements.txt
+	#  pip install -r requirements.txt
 
 activate_env: venv/bin/activate
 	@echo "Activating environment"
 	. .venv/bin/activate
 
-install_reqs:
-	pip install -r requirements.txt
+install_reqs: activate_env
+	$(PIP) install -r requirements.txt
 
 db:
 	@echo "Creating database"
-	python3 db_setup.py 
+	$(PYTHON) db_setup.py 
 
 run: activate_env
 	@echo "Running the app"
-	python3 app.py
+	$(PYTHON) app.py

@@ -86,8 +86,6 @@ def create_sprint_table():
     return fig
 
 
-# page 1 data
-df = px.data.gapminder()
 pole_pos_chart = create_pole_chart()
 qual_chart = create_circuit_qual_time()
 
@@ -115,12 +113,10 @@ layout = html.Div(
                     sm=7,
                     align="center",
                 ),
-                dash_table.DataTable(
-                    id="circuit-id", data=circuits.to_dict("records"), page_size=10
-                ),
             ],
             justify="center",
         ),
+        html.Hr(),
         dbc.Row(
             [
                 dbc.Col(

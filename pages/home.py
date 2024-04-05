@@ -30,5 +30,12 @@ layout = html.Div(
             ],
 			justify="center",
         ),
+		dbc.Row([
+			dbc.Col([
+				html.Strong([
+					"Disclaimer: Some of the results in the app may not be up to date. The data is generally accurate up until August 2023."
+                ])
+            ]),
+        ])
     ]
 )

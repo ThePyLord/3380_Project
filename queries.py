@@ -20,16 +20,16 @@ def make_connection():
 
 
 class Queries:
-	def __init__(self):
-		self.engine = make_connection()
+    def __init__(self):
+        self.engine = make_connection()
 
-	def get_data(self, query, params=None):
-		res = pd.read_sql(query, self.engine, params=params)
-		return res
+    def get_data(self, query, params=None):
+        res = pd.read_sql(query, self.engine, params=params)
+        return res
 
-	def circuits(self, name=None):
-		if name is None:
-			query = """
+    def circuits(self, name=None):
+        if name is None:
+            query = """
 			SELECT circuitRef AS refName, 
 				name, 
 				location, 
@@ -37,9 +37,9 @@ class Queries:
 				lat, lng, 
 				alt AS elevation 
 			FROM circuits;"""
-			return self.get_data(query)
-		else:
-			query = """
+            return self.get_data(query)
+        else:
+            query = """
 			SELECT circuitRef AS refName, 
 				name, 
 				location, 
@@ -48,22 +48,22 @@ class Queries:
 				alt AS elevation
 			FROM circuits
 			WHERE circuitRef LIKE ? OR name LIKE ?;"""
-			return self.get_data(query, params=(f"{name}%",))
+            return self.get_data(query, params=(f"{name}%",))
 
-	def constructors(self, name=None):
-		query = """
-		SELECT DISTINCT c.name AS constructor 
+    def constructors(self, name=None):
+        query = """
+		SELECT DISTINCT c.name AS constructor, c.constructorRef
 		FROM constructor_standings cs 
 		JOIN constructors c ON cs.constructorId = c.constructorId"""
-		if name is not None:
-			query += " WHERE c.name LIKE ?;"
-			return self.get_data(query, params=(f"{name}%",))
-		else:
-			query += ";"
-			return self.get_data(query)
+        if name is not None:
+            query += " WHERE c.name LIKE ?;"
+            return self.get_data(query, params=(f"{name}%",))
+        else:
+            query += ";"
+            return self.get_data(query)
 
-	def fastestLaps(self):
-		query = """
+    def fastestLaps(self):
+        query = """
 		SELECT d.forename + ' ' + d.surname AS driver_name, COUNT(*) AS fastest_laps
 		FROM results r
 		JOIN drivers d ON r.driverId = d.driverId
@@ -71,10 +71,10 @@ class Queries:
 		GROUP BY d.forename, d.surname
 		ORDER BY fastest_laps DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def constructorPoints(self, year):
-		query = """
+    def constructorPoints(self, year):
+        query = """
 		SELECT c.name AS "Constructor Name", SUM(rs.points) AS Points
 		FROM results rs
 		JOIN constructors c ON rs.constructorId = c.constructorId
@@ -84,10 +84,10 @@ class Queries:
 		HAVING SUM(rs.points) > 0
 		ORDER BY Points DESC;
 		"""
-		return self.get_data(query, params=(year,))
+        return self.get_data(query, params=(year,))
 
-	def driverPoints(self, year):
-		query = f"""
+    def driverPoints(self, year):
+        query = f"""
 		SELECT d.forename + ' ' + d.surname AS "Driver Name", SUM(rs.points) AS Points
 		FROM results rs
 		JOIN drivers d ON rs.driverId = d.driverId
@@ -97,10 +97,10 @@ class Queries:
 		HAVING SUM(rs.points) > 0
 		ORDER BY Points DESC;
 		"""
-		return self.get_data(query, params=(year,))
+        return self.get_data(query, params=(year,))
 
-	def polePositions(self):
-		query = """
+    def polePositions(self):
+        query = """
 		SELECT 
 			dr.driverId, 
 			(dr.forename + ' ' + dr.surname) AS "Driver Name", 
@@ -111,33 +111,36 @@ class Queries:
 		GROUP BY dr.driverId, dr.forename, dr.surname
 		ORDER BY PolePositions DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def averagePitStopDurationByCircuit(self):
-		# TODO: Update query to convert milliseconds to seconds
-		query = """
-		SELECT c.name, AVG(p.milliseconds) AS AvgPitStopDuration
+    def averagePitStopDurationByCircuit(self):
+        # TODO: Update query to convert milliseconds to seconds
+        query = """
+		SELECT 
+			c.name, 
+			AVG(p.milliseconds) AS AvgPitStopDuration
 		FROM pit_stops p
 		JOIN races r2 ON p.raceId = r2.raceId
 		JOIN circuits c ON r2.circuitId = c.circuitId
 		GROUP BY c.name
 		ORDER BY AvgPitStopDuration DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def averagePitStopDurationByConstructor(self):
-		query = """
-		SELECT co.name, AVG(ps.milliseconds) AS average_pit_stop_time
+    def averagePitStopDurationByConstructor(self):
+        query = """
+		SELECT 
+			co.name, AVG(ps.milliseconds) AS average_pit_stop_time
 		FROM pit_stops ps
 		JOIN results rs ON ps.raceId = rs.raceId AND ps.driverId = rs.driverId
 		JOIN constructors co ON rs.constructorId = co.constructorId
 		GROUP BY co.name
 		ORDER BY average_pit_stop_time ASC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def fastestQualifyingTimesByCircuit(self, circuit = None):
-		query = """
+    def fastestQualifyingTimesByCircuit(self, circuit = None):
+        query = """
 		SELECT
 			ci.name AS circuit_name,
 			r.year,
@@ -147,14 +150,18 @@ class Queries:
 		JOIN races r ON q.raceId = r.raceId
 		JOIN circuits ci ON r.circuitId = ci.circuitId
 		JOIN drivers d ON q.driverId = d.driverId
+		WHERE q.q1 < 300 OR q.q2 < 300 OR q.q3 < 300
 		GROUP BY ci.name, r.year, d.driverId
 		ORDER BY circuit_name, r.year, fastest_qualifying_time;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def mostSuccessfulDriversAtEachCircuit(self):
-		query = """
-		SELECT ci.name AS circuit_name, dr.driverRef, COUNT(*) AS wins
+    def mostSuccessfulDriversAtEachCircuit(self):
+        query = """
+		SELECT 
+			ci.name AS circuit_name, 
+			dr.driverRef, 
+			COUNT(*) AS wins
 		FROM results rs
 		JOIN races r ON rs.raceId = r.raceId
 		JOIN circuits ci ON r.circuitId = ci.circuitId
@@ -163,21 +170,22 @@ class Queries:
 		GROUP BY circuit_name, dr.driverRef
 		ORDER BY wins DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def driverStandingsOverTime(self, forename, surname):
-		query = """
+    def driverStandingsOverTime(self, forename, surname):
+        query = """
 		SELECT r.year, r.round, dr.driverRef, rs.position
 		FROM results rs
 		JOIN races r ON rs.raceId = r.raceId
 		JOIN drivers dr ON rs.driverId = dr.driverId
 		WHERE dr.forename LIKE ? OR dr.surname LIKE ?
+		GROUP BY r.year, r.round, dr.driverRef, rs.position
 		ORDER BY r.year, r.round;
 		"""
-		return self.get_data(query, params=(f'{forename}%',f'{surname}%',))
+        return self.get_data(query, params=(f'{forename}%',f'{surname}%',))
 
-	def compareConstructorPerformance(self, constructor1, constructor2):
-		query = """
+    def compareConstructorPerformance(self, constructor1, constructor2):
+        query = """
 		WITH CompetedYears AS (
 			SELECT r.year
 			FROM constructor_results cr
@@ -196,12 +204,12 @@ class Queries:
 		GROUP BY r.year, co.constructorRef
 		ORDER BY r.year, total_points DESC;
 		"""
-		# Repeat the constructor names in the same order to match the CTE and main query
-		params = (constructor1, constructor2) * 2
-		return self.get_data(query, params=params)
+        # Repeat the constructor names in the same order to match the CTE and main query
+        params = (constructor1, constructor2) * 2
+        return self.get_data(query, params=params)
 
-	def causes_of_retirements(self):
-		query = """
+    def causes_of_retirements(self):
+        query = """
 		SELECT c.name AS circuit, COUNT(*) AS retirements
 		FROM results r
 		JOIN status s ON r.statusId = s.statusId
@@ -211,10 +219,10 @@ class Queries:
 		GROUP BY c.name
 		ORDER BY retirements DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def sprint_results(self):
-		query = """
+    def sprint_results(self):
+        query = """
 		SELECT
 			--d.driverRef,
 			(d.forename + ' ' +
@@ -226,10 +234,10 @@ class Queries:
 		GROUP BY d.driverRef, d.forename, d.surname
 		ORDER BY wins DESC;
 		"""
-		return self.get_data(query)
+        return self.get_data(query)
 
-	def lap_time_progression(self, race_year, race_name, driver_forename, driver_surname):
-		query = """
+    def lap_time_progression(self, race_year, race_name, driver_forename, driver_surname):
+        query = """
 			SELECT lap_times.lap, lap_times.milliseconds / 1000 AS seconds
 			FROM lap_times
 			INNER JOIN races ON lap_times.raceId = races.raceId
@@ -237,8 +245,33 @@ class Queries:
 			WHERE races.year = ? AND races.name = ? AND drivers.forename = ? AND drivers.surname = ?
 			ORDER BY lap_times.lap;
 		"""
-		return self.get_data(query, params=(race_year, race_name, driver_forename, driver_surname))
+        return self.get_data(query, params=(race_year, race_name, driver_forename, driver_surname))
 
+    def co_competitors(self, constructor: str):
+        """Returns a dataframe of constructors that have competed in the same years as the input constructor.
+		
+		constructor -- The constructor of interest.
+		Return: The dataframe of constructors that have competed in the same years as the input constructor.
+		"""
+        query = """
+		WITH GivenConstructorSeasons AS (
+			SELECT r.year
+			FROM constructor_results cr
+			JOIN races r ON cr.raceId = r.raceId
+			JOIN constructors co ON cr.constructorId = co.constructorId
+			WHERE co.name = ?
+			GROUP BY r.year
+		)
+		SELECT co.constructorId, co.name AS constructor, co.constructorRef, COUNT(DISTINCT r.year) AS seasons
+		FROM constructor_results cr
+		JOIN races r ON cr.raceId = r.raceId
+		JOIN constructors co ON cr.constructorId = co.constructorId
+		JOIN GivenConstructorSeasons gcs ON r.year = gcs.year
+		WHERE co.name != ?
+		GROUP BY co.constructorRef, co.constructorId, co.name
+		HAVING COUNT(DISTINCT r.year) >= 2;
+		"""
+        return self.get_data(query, params=(constructor, constructor))
 
 # def pole_v_finish(self, driver):
 # 	query = """
