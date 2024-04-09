@@ -25,8 +25,6 @@ def create_pole_chart():
 		x="Driver Name",
 		y="PolePositions",
 		color="Driver Name",
-		# text="PolePositions",
-		# orientation="h",
 	)
 
 	for trace in fig.data:
@@ -59,7 +57,6 @@ def create_circuit_qual_time():
     fig.update_layout(
         autosize=True,
         margin=dict(t=50),
-        title="Fastest Qualifying Times By Circuit",
         xaxis_title="Circuit",
         yaxis_title="Fastest Qualifying Time (s)",
     )
@@ -119,6 +116,10 @@ layout = html.Div(
         html.Hr(),
         dbc.Row(
             [
+                html.H3(
+                    children="Fastest Qualifying Times By Circuit",
+                    style={"textAlign": "center"},
+                ),
                 dbc.Col(
                     [
                         dcc.Graph(id="qual-chart", figure=qual_chart),

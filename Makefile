@@ -1,3 +1,4 @@
+.ONESHELL:
 all: create_env install_reqs db run
 
 PYTHON = .venv/bin/python3

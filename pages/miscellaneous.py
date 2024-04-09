@@ -77,6 +77,7 @@ layout = html.Div(
                             data=fastest_laps.to_dict("records"),
                             page_size=10,
                         ),
+                        html.P(["The table above shows drivers and the number of fastest laps they have achieved in their careers."], style={"textAlign": "center"}),
                     ]
                 ),
                 html.Hr(),
@@ -103,6 +104,8 @@ layout = html.Div(
                             style={"textAlign": "center"},
                         ),
                         dcc.Graph(id="ret-id", figure=retirements),
+                        html.P(["A retirement is when a driver is unable to finish a race due to mechanical failure, accident, or other reasons. The chart above shows the distribution of retirements by circuit."], 
+                               style={"textAlign": "center", "fontSize": 20, "fontStyle": "bold"}),
                         html.Footer(children=f"{ret_df.loc[0,'circuit']} has the highest percentage of retirements, at about {ret_df.loc[0,'retirements']}% of all retirements.", style={'textAlign': 'center'}),
                     ],
                 ),

@@ -118,7 +118,7 @@ class Queries:
         query = """
 		SELECT 
 			c.name, 
-			AVG(p.milliseconds) AS AvgPitStopDuration
+			AVG(p.milliseconds) /1000 AS AvgPitStopDuration
 		FROM pit_stops p
 		JOIN races r2 ON p.raceId = r2.raceId
 		JOIN circuits c ON r2.circuitId = c.circuitId
@@ -224,21 +224,20 @@ class Queries:
     def sprint_results(self):
         query = """
 		SELECT
-			--d.driverRef,
 			(d.forename + ' ' +
 			d.surname) AS name,
 			COUNT(*) AS wins
 		FROM sprint_results sr
 		JOIN drivers d ON sr.driverId = d.driverId
 		WHERE sr.position = 1
-		GROUP BY d.driverRef, d.forename, d.surname
+		GROUP BY d.forename, d.surname
 		ORDER BY wins DESC;
 		"""
         return self.get_data(query)
 
     def lap_time_progression(self, race_year, race_name, driver_forename, driver_surname):
         query = """
-			SELECT lap_times.lap, lap_times.milliseconds / 1000 AS seconds
+			SELECT lap_times.lap AS lap, (lap_times.milliseconds / 1000) AS time
 			FROM lap_times
 			INNER JOIN races ON lap_times.raceId = races.raceId
 			INNER JOIN drivers ON lap_times.driverId = drivers.driverId
@@ -259,7 +258,7 @@ class Queries:
 			FROM constructor_results cr
 			JOIN races r ON cr.raceId = r.raceId
 			JOIN constructors co ON cr.constructorId = co.constructorId
-			WHERE co.name = ?
+			WHERE co.constructorRef = ?
 			GROUP BY r.year
 		)
 		SELECT co.constructorId, co.name AS constructor, co.constructorRef, COUNT(DISTINCT r.year) AS seasons
@@ -267,11 +266,12 @@ class Queries:
 		JOIN races r ON cr.raceId = r.raceId
 		JOIN constructors co ON cr.constructorId = co.constructorId
 		JOIN GivenConstructorSeasons gcs ON r.year = gcs.year
-		WHERE co.name != ?
+		WHERE co.constructorRef != ?
 		GROUP BY co.constructorRef, co.constructorId, co.name
 		HAVING COUNT(DISTINCT r.year) >= 2;
 		"""
         return self.get_data(query, params=(constructor, constructor))
+
 
 # def pole_v_finish(self, driver):
 # 	query = """

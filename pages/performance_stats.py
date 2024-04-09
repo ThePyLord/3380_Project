@@ -82,23 +82,26 @@ def create_const_diff(teams=["ferrari", "mercedes"]):
 
 
 def create_line_progression(
-    params=[2009, "Australian Grand Prix", "Lewis", "Hamilton"]
+    params=[2009, "Chinese Grand Prix", "Lewis", "Hamilton"]
 ):
-    const_diff = q.lap_time_progression(params[0], params[1], params[2], params[3])
+    lap_progression = q.lap_time_progression(params[0], params[1], params[2], params[3])
+
     fig = px.line(
-        const_diff,
-        x="Laps",
-        y="Seconds",
-        color="constructor",
+        lap_progression,
+        x="lap",
+        y="time",
+        # color="constructor",
         markers=True,
-        symbol="constructor",
+        # symbol="constructor",
     )
 
     fig.update_layout(
         autosize=True,
         margin=dict(t=50),
-        yaxis_title="Seconds",
-        xaxis_title="Laps",
+        yaxis_title="Time (s)",
+        xaxis_title="Laps completed",
+        xaxis_type="category",
+        title=f'Lap time progression for {params[2]} {params[3]} in the {params[1]} of {params[0]}',
     )
 
     return fig
@@ -108,6 +111,7 @@ sprint_table = q.sprint_results()
 fig = create_const_table()
 driver_fig = create_driver_table()
 const_diff = create_const_diff(teams)
+lap_progression = create_line_progression()
 
 layout = html.Div(
     [
@@ -204,7 +208,7 @@ layout = html.Div(
                                             [
                                                 html.H3(
                                                     id="const_diff_title",
-                                                    children="Performance Difference between Ferrari and Mercedes",
+                                                    children="Ferrari v. Mercedes Performance Difference",
                                                     style={"textAlign": "center"},
                                                 ),
                                             ]
@@ -225,23 +229,27 @@ layout = html.Div(
                                                         }
                                                         for index, row in constructors.iterrows()
                                                     ],
+                                                    placeholder="Select constructor 1",
                                                     id="team-choice-1",
                                                 ),
-                                                dcc.Dropdown(
-                                                    options=[
-                                                        {
-                                                            "label": row["constructor"],
-                                                            "value": row[
-                                                                "constructorRef"
-                                                            ],
-                                                        }
-                                                        for index, row in constructors.iterrows()
-                                                    ],
-                                                    id="team-choice-2",
-                                                ),
                                             ],
-                                            width=10,
+                                            # width=10,
                                         ),
+                                        dbc.Col([
+                                            dcc.Dropdown(
+                                                options=[
+                                                    {
+                                                        "label": row["constructor"],
+                                                        "value": row[
+                                                            "constructorRef"
+                                                        ],
+                                                    }
+                                                    for index, row in constructors.iterrows()
+                                                ],
+                                                placeholder="Select constructor 2",
+                                                id="team-choice-2",
+                                            ),
+                                        ]),
                                         dbc.Col(
                                             [
                                                 html.Button(
@@ -256,6 +264,9 @@ layout = html.Div(
                                         dcc.Graph(
                                             id="const_diff_plot_2", figure=const_diff
                                         ),
+                                        html.P(["The line chart above shows the performance difference between the selected constructors."], style={"textAlign": "center"}),
+                                        html.P(["The x-axis represents the year, and the y-axis represents the total points won by the constructors per year."],
+                                            style={"textAlign": "center"}),
                                     ],
                                     justify="center",
                                 ),
@@ -264,6 +275,9 @@ layout = html.Div(
                     ],
                     justify="center",
                 ),
+                dbc.Row([
+                    dcc.Graph(id="line-fig", figure=lap_progression),
+                ]),
                 dbc.Row(
                     [
                         html.H3(
@@ -360,14 +374,6 @@ def update_driver_title(year=2021):
     return f"Driver standings in {year}"
 
 
-# @callback(Output("const_diff_plot", "figure"), Input("year-choice", "value"))
-# def update_const_diff_plot(value=2021):
-# 	if value is None:
-# 		value = 2021
-# 	const_diff = create_const_diff(teams)
-# 	return const_diff
-
-
 @callback(Output("team-choice-1", "options"), Input("team-choice-2", "value"))
 def update_team_choice_1(value):
     if value is None:
@@ -376,14 +382,11 @@ def update_team_choice_1(value):
         print(f"Team choice 2: {value}")
         teams = q.co_competitors(value)
         # dash.no_update
-    teams_head = teams.head()
     opts = [
         {"label": row["constructor"], "value": row["constructorRef"]}
-        for index, row in teams.iterrows()
+        for _, row in teams.iterrows()
     ]
-    print(opts)
-    # print(f'Team choice 1: {teams.loc[0, "constructor"]}')
-    # print(f'Team choice 1: {teams}')
+    # print(opts)
     return opts
 
 
@@ -394,13 +397,11 @@ def update_team_choice_2(value):
     else:
         print(f"Team choice 1: {value}")
         teams = q.co_competitors(value)
-    teams_head = teams.head()
     opts = [
         {"label": row["constructor"], "value": row["constructorRef"]}
-        for index, row in teams.iterrows()
+        for _, row in teams.iterrows()
     ]
-    print(opts)
-    # print(f'Team choice 2: {teams.loc[0, "constructor"]}')
+    # print(opts)
     return opts
 
 
@@ -415,17 +416,16 @@ def update_team_choice_2(value):
     State("team-choice-1", "value"),
     State("team-choice-2", "value"),
 )
-def update_const_diff_plot(n_clicks, team1, team2):
-    if n_clicks == 0:
+def update_const_diff_plot(n_clicks, team1: str, team2: str):
+    if n_clicks == 0 or team1 is None or team2 is None:
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update
-    # if team1 is None or team2 is None:
-    #     team1 = "Ferrari"
-    #     team2 = "Mercedes"
     teams = [team1, team2]
+    print(f'Team 1: {team1}, Team 2: {team2}')
     const_diff = create_const_diff(teams)
+    # print(f'Team 1: {team1.title()}, Team 2: {team2.title()}')
     return (
         const_diff,
-        f"Performance Difference between {team1} and {team2}",
+        f"{team1.title()} v. {team2.title()} Performance Difference",
         None,
         None,
     )
