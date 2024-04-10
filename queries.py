@@ -50,6 +50,15 @@ class Queries:
 			WHERE circuitRef LIKE ? OR name LIKE ?;"""
             return self.get_data(query, params=(f"{name}%",))
 
+    def years(self):
+        query = """
+		SELECT DISTINCT r.year
+		FROM races r
+		JOIN lap_times lt ON r.raceId = lt.raceId
+		ORDER BY r.year;
+		"""
+        return self.get_data(query)
+
     def constructors(self, name=None):
         query = """
 		SELECT DISTINCT c.name AS constructor, c.constructorRef
@@ -191,7 +200,7 @@ class Queries:
 			FROM constructor_results cr
 			JOIN races r ON cr.raceId = r.raceId
 			JOIN constructors co ON cr.constructorId = co.constructorId
-			WHERE co.constructorRef IN (?, ?)
+			WHERE co.name IN (?, ?)
 			GROUP BY r.year
 			HAVING COUNT(DISTINCT co.constructorRef) = 2
 		)
@@ -200,12 +209,13 @@ class Queries:
 		JOIN races r ON cr.raceId = r.raceId
 		JOIN constructors co ON cr.constructorId = co.constructorId
 		JOIN CompetedYears cy ON r.year = cy.year
-		WHERE co.constructorRef IN (?, ?)
+		WHERE co.name IN (?, ?)
 		GROUP BY r.year, co.constructorRef
 		ORDER BY r.year, total_points DESC;
 		"""
         # Repeat the constructor names in the same order to match the CTE and main query
         params = (constructor1, constructor2) * 2
+
         return self.get_data(query, params=params)
 
     def causes_of_retirements(self):
@@ -235,16 +245,16 @@ class Queries:
 		"""
         return self.get_data(query)
 
-    def lap_time_progression(self, race_year, race_name, driver_forename, driver_surname):
+    def lap_time_progression(self, race_year, race_name, driver_name):
         query = """
-			SELECT lap_times.lap AS lap, (lap_times.milliseconds / 1000) AS time
-			FROM lap_times
-			INNER JOIN races ON lap_times.raceId = races.raceId
-			INNER JOIN drivers ON lap_times.driverId = drivers.driverId
-			WHERE races.year = ? AND races.name = ? AND drivers.forename = ? AND drivers.surname = ?
-			ORDER BY lap_times.lap;
+		SELECT lap_times.lap AS lap, (lap_times.milliseconds / 1000) AS time
+		FROM lap_times
+		JOIN races ON lap_times.raceId = races.raceId
+		JOIN drivers ON lap_times.driverId = drivers.driverId
+		WHERE races.year = ? AND races.name = ? AND drivers.forename + ' ' + drivers.surname = ?
+		ORDER BY lap_times.lap;
 		"""
-        return self.get_data(query, params=(race_year, race_name, driver_forename, driver_surname))
+        return self.get_data(query, params=(race_year, race_name, f'{driver_name}'))
 
     def co_competitors(self, constructor: str):
         """Returns a dataframe of constructors that have competed in the same years as the input constructor.
@@ -258,7 +268,7 @@ class Queries:
 			FROM constructor_results cr
 			JOIN races r ON cr.raceId = r.raceId
 			JOIN constructors co ON cr.constructorId = co.constructorId
-			WHERE co.constructorRef = ?
+			WHERE co.name = ?
 			GROUP BY r.year
 		)
 		SELECT co.constructorId, co.name AS constructor, co.constructorRef, COUNT(DISTINCT r.year) AS seasons
@@ -266,12 +276,31 @@ class Queries:
 		JOIN races r ON cr.raceId = r.raceId
 		JOIN constructors co ON cr.constructorId = co.constructorId
 		JOIN GivenConstructorSeasons gcs ON r.year = gcs.year
-		WHERE co.constructorRef != ?
+		WHERE co.name != ?
 		GROUP BY co.constructorRef, co.constructorId, co.name
 		HAVING COUNT(DISTINCT r.year) >= 2;
 		"""
         return self.get_data(query, params=(constructor, constructor))
 
+    def grand_prixs(self, year):
+        query = """
+		SELECT name, year, raceId
+		FROM races
+		WHERE year = ?
+		"""
+
+        return self.get_data(query, params=(year,))
+
+    def drivers_at_gp(self, year, name):
+        query = """
+		SELECT d.driverRef AS driver_name, d.forename + ' ' + d.surname AS driverName
+		FROM races r
+		JOIN results res ON r.raceId = res.raceId
+		JOIN drivers d ON res.driverId = d.driverId
+		WHERE r.year = ? AND r.name = ?
+		ORDER BY res.grid;
+		"""
+        return self.get_data(query, params=(year, name))
 
 # def pole_v_finish(self, driver):
 # 	query = """

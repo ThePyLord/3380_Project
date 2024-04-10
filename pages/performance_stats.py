@@ -59,8 +59,8 @@ def create_const_table(year=2021):
 
 def create_const_diff(teams=["ferrari", "mercedes"]):
     const_diff = q.compareConstructorPerformance(teams[0], teams[1])
-    if teams[0] != "ferrari" and teams[0] != "mercedes":
-        print(f"Team 1: {teams[0]}, Team 2: {teams[1]}")
+
+        # print(const_diff.head())
     fig = px.line(
         const_diff,
         x="year",
@@ -81,37 +81,11 @@ def create_const_diff(teams=["ferrari", "mercedes"]):
     return fig
 
 
-def create_line_progression(
-    params=[2009, "Chinese Grand Prix", "Lewis", "Hamilton"]
-):
-    lap_progression = q.lap_time_progression(params[0], params[1], params[2], params[3])
-
-    fig = px.line(
-        lap_progression,
-        x="lap",
-        y="time",
-        # color="constructor",
-        markers=True,
-        # symbol="constructor",
-    )
-
-    fig.update_layout(
-        autosize=True,
-        margin=dict(t=50),
-        yaxis_title="Time (s)",
-        xaxis_title="Laps completed",
-        xaxis_type="category",
-        title=f'Lap time progression for {params[2]} {params[3]} in the {params[1]} of {params[0]}',
-    )
-
-    return fig
-
 
 sprint_table = q.sprint_results()
 fig = create_const_table()
 driver_fig = create_driver_table()
 const_diff = create_const_diff(teams)
-lap_progression = create_line_progression()
 
 layout = html.Div(
     [
@@ -224,7 +198,7 @@ layout = html.Div(
                                                         {
                                                             "label": row["constructor"],
                                                             "value": row[
-                                                                "constructorRef"
+                                                                "constructor"
                                                             ],
                                                         }
                                                         for index, row in constructors.iterrows()
@@ -241,7 +215,7 @@ layout = html.Div(
                                                     {
                                                         "label": row["constructor"],
                                                         "value": row[
-                                                            "constructorRef"
+                                                            "constructor"
                                                         ],
                                                     }
                                                     for index, row in constructors.iterrows()
@@ -275,9 +249,6 @@ layout = html.Div(
                     ],
                     justify="center",
                 ),
-                dbc.Row([
-                    dcc.Graph(id="line-fig", figure=lap_progression),
-                ]),
                 dbc.Row(
                     [
                         html.H3(
@@ -383,10 +354,9 @@ def update_team_choice_1(value):
         teams = q.co_competitors(value)
         # dash.no_update
     opts = [
-        {"label": row["constructor"], "value": row["constructorRef"]}
+        {"label": row["constructor"], "value": row["constructor"]}
         for _, row in teams.iterrows()
     ]
-    # print(opts)
     return opts
 
 
@@ -398,10 +368,9 @@ def update_team_choice_2(value):
         print(f"Team choice 1: {value}")
         teams = q.co_competitors(value)
     opts = [
-        {"label": row["constructor"], "value": row["constructorRef"]}
+        {"label": row["constructor"], "value": row["constructor"]}
         for _, row in teams.iterrows()
     ]
-    # print(opts)
     return opts
 
 
@@ -420,12 +389,12 @@ def update_const_diff_plot(n_clicks, team1: str, team2: str):
     if n_clicks == 0 or team1 is None or team2 is None:
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update
     teams = [team1, team2]
-    print(f'Team 1: {team1}, Team 2: {team2}')
+    # print(f'Team 1: {team1}, Team 2: {team2}')
     const_diff = create_const_diff(teams)
-    # print(f'Team 1: {team1.title()}, Team 2: {team2.title()}')
+    print(f'Team 1: {team1}, Team 2: {team2}')
     return (
         const_diff,
-        f"{team1.title()} v. {team2.title()} Performance Difference",
+        f"{team1} v. {team2} Performance Difference",
         None,
         None,
     )
